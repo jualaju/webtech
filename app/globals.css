@@ -71,3 +71,13 @@ body{background:var(--paper);letter-spacing:-.01em}
 .modal-bg{background:#111a2db5}.modal{border-radius:18px}.form input,.form textarea{border-color:var(--line);background:var(--surface-soft);color:var(--ink)}
 [data-theme="dark"] .sidebar{background:#0b1220}.sidebar-note{background:linear-gradient(145deg,#222a4a,#171f39)}[data-theme="dark"] .topbar{background:var(--surface)}[data-theme="dark"] .event-card:hover{box-shadow:0 15px 30px #0005}[data-theme="dark"] .tag{background:#f5f6ff;color:#252b45}
 @media(max-width:700px){.topbar{padding:0 17px}.workspace{padding:30px 17px}.intro{margin-bottom:31px}.pulse{min-width:0}.section-head{align-items:flex-start;flex-direction:column;gap:10px}.section-head>.link{padding:0}.event-art{height:128px}.notification-popover{top:61px}}
+
+/* Interaction polish */
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #8b82ff55;outline-offset:2px}
+.top-actions .secondary{padding:11px 16px;border-radius:10px;font-weight:800}
+.event-card{display:flex;flex-direction:column}.event-body{display:flex;flex-direction:column;flex:1}.event-foot{margin-top:auto;padding-top:16px}.event-foot .link{white-space:nowrap}
+.modal{max-height:calc(100vh - 40px);overflow:auto}.modal h2{letter-spacing:-.045em}.modal .primary{margin-top:5px;padding:12px 15px}
+.form-split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.event-preview{display:flex;align-items:center;gap:14px;padding-right:24px}.event-preview .event-art{width:74px;height:74px;min-width:74px;border-radius:14px;display:grid;place-items:center;padding:0}.event-preview .tag{display:inline-block;margin-bottom:8px;font-size:10px}.event-preview h2{font-size:25px;line-height:1.08;margin:0}.join-details{display:grid;gap:0;border:1px solid var(--line);border-radius:13px;margin:24px 0 16px;overflow:hidden}.join-details>div{display:flex;align-items:center;gap:12px;padding:13px 14px;border-top:1px solid var(--line)}.join-details>div:first-child{border-top:0}.join-details svg{color:var(--green);flex:none}.join-details span{display:grid;gap:3px}.join-details strong{font-size:13px}.join-details small{font-size:11px;color:var(--muted)}.join-copy{font-size:13px!important;margin:0 0 18px!important}.join-confirm{width:100%}
+.modal .form-error{margin:0}
+@media(max-width:520px){.form-split{grid-template-columns:1fr}.event-preview h2{font-size:21px}}

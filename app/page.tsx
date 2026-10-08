@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArrowRight, Bell, CalendarDays, Check, ChevronRight, Clock3, Code2, FileCheck2, LayoutDashboard, LogOut, Menu, Moon, Plus, Search, Sparkles, Sun, Trophy, Users, X } from 'lucide-react';
+import { ArrowRight, Bell, CalendarDays, Check, ChevronRight, Clock3, Code2, FileCheck2, LayoutDashboard, LogOut, MapPin, Menu, Moon, Plus, Search, Sparkles, Sun, Trophy, Users, X } from 'lucide-react';
 
-type EventItem = { title: string; date: string; place: string; description: string; teams: number; status: string; art: string; icon: 'code' | 'users' | 'trophy' | 'spark' };
+type EventItem = { title: string; date: string; place: string; description: string; teams: number; status: string; art: string; icon: 'code' | 'users' | 'trophy' | 'spark'; createdBy?: string };
 
 const events: EventItem[] = [
   { title: 'Build for Tomorrow', date: 'Oct 18–20, 2026', place: 'Innovation Lab · Main Campus', description: 'A 48-hour build sprint for ideas that make campus life better.', teams: 24, status: 'registration open', art: 'art-a', icon: 'code' },
@@ -22,17 +22,27 @@ export default function Home() {
   const [active, setActive] = useState('Overview');
   const [query, setQuery] = useState('');
   const [modal, setModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
+  const [createdEvents, setCreatedEvents] = useState<EventItem[]>([]);
+  const [createError, setCreateError] = useState('');
   const [registered, setRegistered] = useState<string[]>([]);
   const [menu, setMenu] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
-  const visible = events.filter((event) => `${event.title} ${event.place} ${event.description}`.toLowerCase().includes(query.toLowerCase()));
+  const allEvents = [...createdEvents, ...events];
+  const visible = allEvents.filter((event) => `${event.title} ${event.place} ${event.description}`.toLowerCase().includes(query.toLowerCase()));
 
   useEffect(() => {
     setAuthenticated(localStorage.getItem('eventforge-session') === 'active');
     setDarkMode(localStorage.getItem('eventforge-theme') === 'dark');
     setUserName(localStorage.getItem('eventforge-name') || 'Jual Aju');
     setNow(new Date());
+    try {
+      const savedEvents = JSON.parse(localStorage.getItem('eventforge-created-events') || '[]');
+      if (Array.isArray(savedEvents)) setCreatedEvents(savedEvents);
+      const savedRegistrations = JSON.parse(localStorage.getItem('eventforge-registrations') || '[]');
+      if (Array.isArray(savedRegistrations)) setRegistered(savedRegistrations);
+    } catch { /* keep the demo usable if local storage is unavailable */ }
   }, []);
 
   useEffect(() => {
@@ -45,7 +55,35 @@ export default function Home() {
     localStorage.setItem('eventforge-theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
 
-  function register(title: string) { setRegistered((current) => current.includes(title) ? current : [...current, title]); }
+  function confirmRegistration() {
+    if (!selectedEvent) return;
+    setRegistered((current) => {
+      const next = current.includes(selectedEvent.title) ? current : [...current, selectedEvent.title];
+      localStorage.setItem('eventforge-registrations', JSON.stringify(next));
+      return next;
+    });
+    setSelectedEvent(null);
+  }
+
+  function createEvent(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const title = String(data.get('title') || '').trim();
+    const date = String(data.get('date') || '').trim();
+    const place = String(data.get('place') || '').trim();
+    const description = String(data.get('description') || '').trim();
+    if (!title || !date || !place || !description) {
+      setCreateError('Complete every field before publishing your event.');
+      return;
+    }
+    const nextEvent: EventItem = { title, date, place, description, teams: 0, status: 'registration open', art: 'art-d', icon: 'users', createdBy: userName };
+    const nextEvents = [nextEvent, ...createdEvents];
+    setCreatedEvents(nextEvents);
+    localStorage.setItem('eventforge-created-events', JSON.stringify(nextEvents));
+    setCreateError('');
+    setModal(false);
+    setActive('Discover events');
+  }
 
   function handleAuth(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -75,7 +113,7 @@ export default function Home() {
   const firstName = userName.trim().split(/\s+/)[0] || 'there';
   const dateLabel = now ? new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).format(now) : 'Your event workspace';
 
-  const eventCard = (event: EventItem) => <article className="event-card" key={event.title}><div className={`event-art ${event.art}`}><span className="tag">{event.status}</span>{iconFor(event.icon)}</div><div className="event-body"><div className="event-date"><CalendarDays size={14} />{event.date}</div><h3>{event.title}</h3><p>{event.description}</p><div className="event-foot"><span><Users size={14} />{event.teams} teams joined</span><button className="link" onClick={() => register(event.title)}>{registered.includes(event.title) ? 'Registered' : 'Join event'} <ChevronRight size={14} /></button></div></div></article>;
+  const eventCard = (event: EventItem) => <article className="event-card" key={`${event.title}-${event.date}`}><div className={`event-art ${event.art}`}><span className="tag">{event.status}</span>{iconFor(event.icon)}</div><div className="event-body"><div className="event-date"><CalendarDays size={14} />{event.date}</div><h3>{event.title}</h3><p>{event.description}</p><div className="event-foot"><span><Users size={14} />{event.teams} teams joined</span><button className="link" onClick={() => setSelectedEvent(event)}>{registered.includes(event.title) ? 'Registered' : 'View & join'} <ChevronRight size={14} /></button></div></div></article>;
 
   const updatesPanel = <section className="panel updates-panel"><div className="panel-title"><Bell size={18} /><h3>Latest updates</h3></div><div className="feed-row"><span className="feed-dot" /><div><strong>Build for Tomorrow · Registration is open</strong><p>Team formation closes on October 16. Bring a team or join one at the venue.</p><time>2 hours ago</time></div></div><div className="feed-row"><span className="feed-dot" /><div><strong>Certificates are ready to verify</strong><p>Certificates from Campus Code Jam are now available in your workspace.</p><time>Yesterday</time></div></div><div className="feed-row"><span className="feed-dot" /><div><strong>New challenge track added</strong><p>AI for Good now includes a responsible innovation track.</p><time>3 days ago</time></div></div></section>;
 
@@ -100,10 +138,11 @@ export default function Home() {
         <div className="intro"><div><div className="kicker">{dateLabel}</div><h1>{greeting},<br /><em>{firstName}.</em></h1><p>Pick up where you left off, or find the next event worth showing up for.</p></div><div className="pulse"><div className="pulse-orb" /><small>YOUR EVENT PULSE</small><strong>{registered.length ? `${registered.length} event${registered.length > 1 ? 's' : ''} on your calendar` : 'Your calendar is wide open'}</strong><span>{registered.length ? 'Registration confirmed. See you there.' : 'There is plenty of room for a good idea.'}</span></div></div>
         {active === 'Overview' && <><div className="metrics"><div className="metric"><div className="metric-top">Active events <CalendarDays size={17} /></div><strong>08</strong><small>+2 this week</small></div><div className="metric"><div className="metric-top">Registered teams <Users size={17} /></div><strong>126</strong><small>Across all events</small></div><div className="metric"><div className="metric-top">Projects submitted <FileCheck2 size={17} /></div><strong>64</strong><small>Ready for review</small></div><div className="metric"><div className="metric-top">Upcoming deadline <Clock3 size={17} /></div><strong>06d</strong><small>Build for Tomorrow</small></div></div><div className="section-head"><div><h2>Find your next build</h2><p>Events open for registration and collaboration.</p></div><button className="link" onClick={() => setActive('Discover events')}>View all events <ArrowRight size={14} /></button></div><div className="event-grid">{visible.map(eventCard)}</div><div className="lower-grid">{updatesPanel}<section className="panel"><div className="panel-title"><Trophy size={18} /><h3>Leaderboard · Campus Code Jam</h3></div>{[['01', 'Null Pointers', '92.4'], ['02', 'The Build Crew', '89.7'], ['03', 'Ctrl Alt Elite', '86.2']].map(([rank, name, score]) => <div className="rank-row" key={name}><span className="rank">{rank}</span><div><strong>{name}</strong><small>Team project</small></div><span className="score">{score}</span></div>)}</section></div></>}
         {active === 'Discover events' && <><div className="section-head"><div><h2>Discover events</h2><p>Search upcoming events and join your next team.</p></div></div><label className="search-field"><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by event, location, or description" /></label><div className="event-grid">{visible.length ? visible.map(eventCard) : <div className="panel empty-state"><Search size={24} /><h3>No events found</h3><p>Try a different search term.</p></div>}</div></>}
-        {active === 'My events' && <><div className="section-head"><div><h2>My events</h2><p>Events you have registered for.</p></div></div>{registered.length ? <div className="event-grid">{events.filter((event) => registered.includes(event.title)).map(eventCard)}</div> : <div className="panel empty-state"><CalendarDays size={24} /><h3>Your calendar is empty</h3><p>Explore events and join one to see it here.</p><button className="primary" onClick={() => setActive('Discover events')}>Discover events <ArrowRight size={16} /></button></div>}</>}
+        {active === 'My events' && <><div className="section-head"><div><h2>My events</h2><p>Events you have registered for.</p></div></div>{registered.length ? <div className="event-grid">{allEvents.filter((event) => registered.includes(event.title)).map(eventCard)}</div> : <div className="panel empty-state"><CalendarDays size={24} /><h3>Your calendar is empty</h3><p>Explore events and join one to see it here.</p><button className="primary" onClick={() => setActive('Discover events')}>Discover events <ArrowRight size={16} /></button></div>}</>}
         {active === 'Certificates' && <><div className="section-head"><div><h2>Certificates</h2><p>View and verify your event achievements.</p></div></div><section className="panel certificate-card"><div className="certificate-icon"><Trophy size={25} /></div><div><h3>Campus Code Jam 2026</h3><p>Participation certificate · Ready to verify</p></div><button className="secondary" onClick={() => window.alert('Certificate verification is ready to launch.')}>Verify certificate <ArrowRight size={15} /></button></section></>}
       </section>
     </main>
-    {modal && <div className="modal-bg" role="dialog" aria-modal="true"><div className="modal"><button className="close" aria-label="Close" onClick={() => setModal(false)}><X size={19} /></button><div className="kicker">Organizer workspace</div><h2>Create an event</h2><p>Set up the basics now. You can add challenges, schedules, and judges after publishing.</p><form className="form" onSubmit={(event) => { event.preventDefault(); setModal(false); }}><label>Event name<input required placeholder="e.g. Campus Innovation Sprint" /></label><label>Location<input required placeholder="Main campus · Innovation Lab" /></label><label>About the event<textarea required rows={3} placeholder="What should participants know?" /></label><button className="primary" type="submit">Create draft <ArrowRight size={16} /></button></form></div></div>}
+    {modal && <div className="modal-bg" role="dialog" aria-modal="true"><div className="modal"><button className="close" aria-label="Close" onClick={() => setModal(false)}><X size={19} /></button><div className="kicker">Organizer workspace</div><h2>Publish an event</h2><p>Give people the details they need to decide if this is the right event for them.</p><form className="form" onSubmit={createEvent}><label>Event name<input name="title" required placeholder="e.g. Campus Innovation Sprint" /></label><div className="form-split"><label>Date<input name="date" required placeholder="e.g. Nov 12, 2026" /></label><label>Location<input name="place" required placeholder="Innovation Lab" /></label></div><label>About the event<textarea name="description" required rows={3} placeholder="What should participants know?" /></label>{createError && <p className="form-error">{createError}</p>}<button className="primary" type="submit">Publish event <ArrowRight size={16} /></button></form></div></div>}
+    {selectedEvent && <div className="modal-bg" role="dialog" aria-modal="true"><div className="modal join-modal"><button className="close" aria-label="Close" onClick={() => setSelectedEvent(null)}><X size={19} /></button><div className="event-preview"><div className={`event-art ${selectedEvent.art}`}>{iconFor(selectedEvent.icon)}</div><div><span className="tag">{selectedEvent.status}</span><h2>{selectedEvent.title}</h2></div></div><div className="join-details"><div><CalendarDays size={17} /><span><strong>{selectedEvent.date}</strong><small>Date</small></span></div><div><MapPin size={17} /><span><strong>{selectedEvent.place}</strong><small>Location</small></span></div><div><Users size={17} /><span><strong>{selectedEvent.teams} teams joined</strong><small>Community</small></span></div></div><p className="join-copy">Review the details before confirming. Your registration will be added to My events.</p><button className="primary join-confirm" onClick={confirmRegistration}>{registered.includes(selectedEvent.title) ? 'Already registered' : 'Confirm registration'} <Check size={16} /></button></div></div>}
   </div>;
 }
