@@ -25,3 +25,10 @@
 .primary:hover{background:#1257bd}
 [data-theme="dark"] .auth-page{background:radial-gradient(circle at 15% 15%,#17345d 0,#0d1728 50%,#0a1120 100%)}
 [data-theme="dark"] .sidebar-note{background:#17345d}
+.search-field{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin:-2px 0 18px;color:var(--muted)}
+.search-field input{width:100%;border:0;outline:0;background:transparent;color:var(--ink)}
+.empty-state{display:grid;place-items:center;text-align:center;gap:8px;min-height:190px;color:var(--muted)}
+.empty-state h3,.empty-state p{margin:0}.empty-state h3{color:var(--ink)}.empty-state .primary{margin-top:8px}
+.certificate-card{display:flex;align-items:center;gap:16px}.certificate-icon{width:52px;height:52px;border-radius:14px;background:var(--mint);color:var(--green);display:grid;place-items:center}.certificate-card h3{margin:0 0 5px}.certificate-card p{margin:0;color:var(--muted);font-size:13px}.certificate-card .secondary{margin-left:auto}
+.notification-popover{position:absolute;right:clamp(20px,4vw,54px);top:68px;width:min(390px,calc(100% - 34px));z-index:10;box-shadow:0 18px 45px #102d551f}.notification-popover .panel{border:0;padding:0}
+@media(max-width:700px){.certificate-card{align-items:flex-start;flex-wrap:wrap}.certificate-card .secondary{margin-left:68px}.notification-popover{right:17px}}
