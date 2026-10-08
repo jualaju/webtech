@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ArrowRight, Bell, CalendarDays, Check, ChevronRight, Clock3, Code2, FileCheck2, LayoutDashboard, LogOut, Menu, Plus, Search, Sparkles, Trophy, Users, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowRight, Bell, CalendarDays, Check, ChevronRight, Clock3, Code2, FileCheck2, LayoutDashboard, LogOut, Menu, Moon, Plus, Search, Sparkles, Sun, Trophy, Users, X } from 'lucide-react';
 
 type EventItem = { title: string; date: string; place: string; description: string; teams: number; status: string; art: string; icon: 'code' | 'users' | 'trophy' | 'spark' };
 
@@ -14,6 +14,11 @@ const events: EventItem[] = [
 const iconFor = (name: EventItem['icon']) => name === 'code' ? <Code2 size={29} /> : name === 'users' ? <Users size={29} /> : name === 'trophy' ? <Trophy size={29} /> : <Sparkles size={29} />;
 
 export default function Home() {
+  const [authenticated, setAuthenticated] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [authError, setAuthError] = useState('');
+  const [darkMode, setDarkMode] = useState(false);
+  const [userName, setUserName] = useState('Jual Aju');
   const [active, setActive] = useState('Overview');
   const [query, setQuery] = useState('');
   const [modal, setModal] = useState(false);
@@ -21,7 +26,44 @@ export default function Home() {
   const [menu, setMenu] = useState(false);
   const visible = events.filter((event) => `${event.title} ${event.place} ${event.description}`.toLowerCase().includes(query.toLowerCase()));
 
+  useEffect(() => {
+    setAuthenticated(localStorage.getItem('eventforge-session') === 'active');
+    setDarkMode(localStorage.getItem('eventforge-theme') === 'dark');
+    setUserName(localStorage.getItem('eventforge-name') || 'Jual Aju');
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = darkMode ? 'dark' : 'light';
+    localStorage.setItem('eventforge-theme', darkMode ? 'dark' : 'light');
+  }, [darkMode]);
+
   function register(title: string) { setRegistered((current) => current.includes(title) ? current : [...current, title]); }
+
+  function handleAuth(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const email = String(data.get('email') || '').trim();
+    const password = String(data.get('password') || '');
+    const name = String(data.get('name') || '').trim();
+    if (!email || !email.includes('@') || password.length < 6) {
+      setAuthError('Use a valid email and a password with at least 6 characters.');
+      return;
+    }
+    localStorage.setItem('eventforge-session', 'active');
+    localStorage.setItem('eventforge-email', email);
+    localStorage.setItem('eventforge-name', name || email.split('@')[0]);
+    setUserName(name || email.split('@')[0]);
+    setAuthenticated(true);
+    setAuthError('');
+  }
+
+  function signOut() {
+    localStorage.removeItem('eventforge-session');
+    setAuthenticated(false);
+    setAuthMode('signin');
+  }
+
+  if (!authenticated) return <main className="auth-page"><div className="auth-brand"><span className="brand-mark"><Check size={20} strokeWidth={3} /></span>Event<em>Forge</em></div><div className="auth-card"><div className="kicker">Your event workspace</div><h1>{authMode === 'signin' ? 'Welcome back.' : 'Make ideas happen.'}</h1><p>{authMode === 'signin' ? 'Sign in to continue to your events, teams, and projects.' : 'Create your free workspace and start building what matters.'}</p><div className="auth-tabs"><button className={authMode === 'signin' ? 'selected' : ''} onClick={() => { setAuthMode('signin'); setAuthError(''); }}>Sign in</button><button className={authMode === 'signup' ? 'selected' : ''} onClick={() => { setAuthMode('signup'); setAuthError(''); }}>Sign up</button></div><form className="form auth-form" onSubmit={handleAuth}>{authMode === 'signup' && <label>Your name<input name="name" required placeholder="e.g. Jual Aju" /></label>}<label>Email address<input name="email" type="email" required placeholder="you@example.com" /></label><label>Password<input name="password" type="password" required minLength={6} placeholder="At least 6 characters" /></label>{authError && <p className="form-error">{authError}</p>}<button className="primary auth-submit" type="submit">{authMode === 'signin' ? 'Sign in' : 'Create account'} <ArrowRight size={16} /></button></form><small className="auth-note">Demo mode: any valid email and 6+ character password works.</small></div><button className="theme-toggle auth-theme" onClick={() => setDarkMode(!darkMode)}>{darkMode ? <Sun size={16} /> : <Moon size={16} />}{darkMode ? 'Light mode' : 'Dark mode'}</button></main>;
 
   return <div className="shell">
     <aside className="sidebar">
@@ -32,10 +74,10 @@ export default function Home() {
       </nav>
       <div className="spacer" />
       <div className="sidebar-note"><Sparkles size={21} /><strong>Make ideas happen.</strong><p>One place for the people, projects, and moments that matter.</p></div>
-      <div className="user-card"><span className="avatar">J</span><div><strong>Jual Aju</strong><small>Participant · Demo account</small></div><button aria-label="Sign out"><LogOut size={17} /></button></div>
+      <div className="user-card"><span className="avatar">{userName.charAt(0).toUpperCase()}</span><div><strong>{userName}</strong><small>Participant · Demo account</small></div><button aria-label="Sign out" onClick={signOut}><LogOut size={17} /></button></div>
     </aside>
     <main className="main">
-      <header className="topbar"><button className="icon-btn mobile-only" aria-label="Open navigation" onClick={() => setMenu(!menu)}><Menu size={22} /></button><div className="crumb"><span>Workspace <ChevronRight size={14} /></span><strong>{active}</strong></div><div className="top-actions"><button className="icon-btn" aria-label="Notifications"><Bell size={19} /></button><button className="secondary" onClick={() => setModal(true)}><Plus size={16} /> Create event</button></div></header>
+      <header className="topbar"><button className="icon-btn mobile-only" aria-label="Open navigation" onClick={() => setMenu(!menu)}><Menu size={22} /></button><div className="crumb"><span>Workspace <ChevronRight size={14} /></span><strong>{active}</strong></div><div className="top-actions"><button className="icon-btn" aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} onClick={() => setDarkMode(!darkMode)}>{darkMode ? <Sun size={19} /> : <Moon size={19} />}</button><button className="icon-btn" aria-label="Notifications"><Bell size={19} /></button><button className="secondary" onClick={() => setModal(true)}><Plus size={16} /> Create event</button></div></header>
       {menu && <div className="mobile-menu panel"><div className="kicker">Workspace</div>{['Overview', 'Discover events', 'My events', 'Certificates'].map(item => <button className="link" key={item} onClick={() => { setActive(item); setMenu(false); }}>{item}</button>)}</div>}
       <section className="workspace">
         <div className="intro"><div><div className="kicker">Tuesday, October 8, 2026</div><h1>Good morning,<br /><em>Jual.</em></h1><p>Pick up where you left off, or find the next event worth showing up for.</p></div><div className="pulse"><small>YOUR EVENT PULSE</small><strong>{registered.length ? `${registered.length} event${registered.length > 1 ? 's' : ''} on your calendar` : 'Your calendar is wide open'}</strong><span>{registered.length ? 'Registration confirmed. See you there.' : 'There is plenty of room for a good idea.'}</span></div></div>
