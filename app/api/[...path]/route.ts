@@ -14,8 +14,10 @@ async function handle(request: NextRequest, { params }: { params: Promise<{ path
     if (Buffer.byteLength(raw) > 16384)
       return NextResponse.json({ error: 'Request too large.' }, { status: 413 });
     const pathname = '/' + (await params).path.join('/');
-    if (process.env.LAMBDA_API_URL) {
-      const response = await fetch(process.env.LAMBDA_API_URL.replace(/\/$/, '') + pathname, {
+    const lambdaApiUrl =
+      process.env.LAMBDA_API_URL ?? 'https://qeibhvgse3.execute-api.us-east-1.amazonaws.com';
+    if (lambdaApiUrl) {
+      const response = await fetch(lambdaApiUrl.replace(/\/$/, '') + pathname, {
         method: request.method,
         headers: {
           'content-type': 'application/json',
