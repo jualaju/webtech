@@ -77,7 +77,7 @@ On success the script saves `LAMBDA_API_URL` and `LAMBDA_API_KEY` to gitignored 
 ## Connect the existing Vercel project
 
 1. Set the project's Node.js version to 22 or newer, framework to Next.js, and build command to `npm run build`.
-2. Add `LAMBDA_API_URL` and `LAMBDA_API_KEY` from `.env.local` to Vercel's server-side environment variables. Add them to each environment you intend to use.
+2. Add `LAMBDA_API_KEY` from `.env.local` to Vercel's server-side environment variables for each environment you intend to use. The API URL is hardcoded as the default; set `LAMBDA_API_URL` to override it. An explicitly empty URL keeps the local development backend enabled.
 3. Deploy this repository to the existing Vercel project. Do not prefix either variable with `NEXT_PUBLIC_`.
 4. Check `/api/workspace`, choose a demo phone identity, register a team, and verify the registration from another session/device.
 
